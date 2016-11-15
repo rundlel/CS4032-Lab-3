@@ -1,11 +1,17 @@
 var net = require('net');
 
-var chatClients[];
- var clientNo =0;
+var chatroom1[];
+var chatroom2[];
+var chatroom3[];
+var message[];
+var clientNo =0;
+
+//note to self: create array to store user and the room they are in? for easy removal?
 
 net.createServer(function(socket){
 	clientNo++;
 	socket.name = "Client " + clientNo;
+
 
 	chatClients.push(socket);
 	socket.write("Welcome " + socket.name + "/n");
@@ -14,7 +20,27 @@ net.createServer(function(socket){
 
 
 	socket.on("data", function(message){
-		broadcast(socket.name + "/n >" + message, socket);
+
+		if(message.substring(0,14)==="JOIN_CHATROOM:")
+		{
+			//convert to array in order to extract room name and client name
+			var index=0;
+
+		}
+		else if(message.substring(0,15)==="LEAVE_CHATROOM:")
+		{
+			//leave room but DON'T CLOSE SOCKET
+		}
+		else if(message.substring(0, 11)==="DISCONNECT:")
+		{
+			//terminate connection
+		}
+		else
+		{
+			//broadcast message
+			broadcast(socket.name + "/n >" + message, socket);
+		}
+		
 
 	});
 
