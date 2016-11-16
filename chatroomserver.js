@@ -10,7 +10,7 @@ var address = IP.getLocalIP4();
 //1		|		  |		 |		|
 //2		|		  |		 |		|
 //3		|		  |		 |		|
-var chatrooms = new array();
+var chatrooms = new Array();
 
 
 
@@ -21,7 +21,7 @@ var clientNo = 0;
 //maybe use a map?
 
 net.createServer(function(socket){
-	clientNo++;
+
 	//socket.name = "Client " + clientNo;
 
 
@@ -29,14 +29,14 @@ net.createServer(function(socket){
 	//socket.write("Welcome " + socket.name + "/n");
 	//broadcast(socket.name + " joined the chat", socket);
 	clientNo++;
-	var ipAddress = socket.address().address();
+	var ipAddress = socket.address().address;
 
 	socket.on("data", function(message){
 
 		if(message.toString().substring(0,14)==="JOIN_CHATROOM:")
 		{
 			//convert to array in order to extract room name and client name
-			var data = message.toString().split("/n");
+			var data = message.toString().split("\n");
 			var room = data[0].toString().split(" ");
 			var name = data[3].toString().split(" ");
 
@@ -55,10 +55,10 @@ net.createServer(function(socket){
 				else if (chatrooms[i] === chatroomName)
 				{
 					chatrooms.splice(i, username);
-					socket.write("JOINED_CHATROOM: " + chatroomName + "/n"
-								+ "SERVER_IP: " + ipAddress + "/n"
-								+ "PORT: 7070 /n"
-								+ "ROOM_REF: " + i + "/n"
+					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
+								+ "SERVER_IP: " + ipAddress + "\n"
+								+ "PORT: 7070 \n"
+								+ "ROOM_REF: " + i + "\n"
 								+ "JOIN_ID: " + clientNo);
 
 					broadcast(username + " joined the chat", socket);
@@ -66,10 +66,10 @@ net.createServer(function(socket){
 				else if(chatrooms[i] === null)			
 				{
 					chatrooms.splice(i, chatroomName, username);
-					socket.write("JOINED_CHATROOM: " + chatroomName + "/n"
-								+ "SERVER_IP: " + ipAddress + "/n"
-								+ "PORT: 7070 /n"
-								+ "ROOM_REF: " + i + "/n"
+					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
+								+ "SERVER_IP: " + ipAddress + "\n"
+								+ "PORT: 7070 \n"
+								+ "ROOM_REF: " + i + "\n"
 								+ "JOIN_ID: " + clientNo);
 
 					broadcast(username + " joined the chat", socket);
@@ -101,7 +101,7 @@ net.createServer(function(socket){
 
 	socket.on("end", function(){
 		chatClients.splice(chatClients.indexOf(socket), 1);
-		broadcast(socket.name + " left the chat. /n");
+		broadcast(socket.name + " left the chat. \n");
 	})
 
 	function broadcast(message, sender)
