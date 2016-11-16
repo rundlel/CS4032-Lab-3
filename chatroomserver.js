@@ -1,22 +1,35 @@
 var net = require('net');
+var IP = require('quick-local-ip');
 
-var chatroom1[];
-var chatroom2[];
-var chatroom3[];
-var clientNo =0;
+var address = IP.getLocalIP4();
+
+//two dimensional array to store the chatrooms and what clients are in the rooms
+
+//INDEX |ROOM NAME|SOCKET|SOCKET| SOCKET.....
+//0		|		  |		 |		|
+//1		|		  |		 |		|
+//2		|		  |		 |		|
+//3		|		  |		 |		|
+var chatrooms = new array();
+
+
+
+var clientNo = 0;
+
 
 //note to self: create array to store user and the room they are in? for easy removal?
 //maybe use a map?
 
 net.createServer(function(socket){
-	//clientNo++;
+	clientNo++;
 	//socket.name = "Client " + clientNo;
 
 
 	//chatClients.push(socket);
 	//socket.write("Welcome " + socket.name + "/n");
 	//broadcast(socket.name + " joined the chat", socket);
-
+	clientNo++;
+	var ipAddress = socket.address().address();
 
 	socket.on("data", function(message){
 
@@ -24,30 +37,46 @@ net.createServer(function(socket){
 		{
 			//convert to array in order to extract room name and client name
 			var data = message.toString().split("/n");
-			var room = data[0].toString().split(" ");	
+			var room = data[0].toString().split(" ");
+			var name = data[3].toString().split(" ");
 
-			process.stdout.write(data[0] + "/n");
-			for( var i = 0; i<room.length; i++)
-			{
-				process.stdout.write(room[i] + " ");
-			}
-
-			if room[1] === "one"
-			{
-				process.stdout.write("successfully joined chatroom one");
-			}
-			else if room [1] === "two"
+			chatroomName = room[1].toString();
+			username = name[1].toString();
+			//check if username is taken
+	
+			//create chatroom
+			for(var i = 0; i<chatrooms.length; i++)
 			{
 
-			}
-			else if room[1] === "three"
-			{
+				if (chatrooms.length===4)
+				{
+					//error message - too many rooms
+				}
+				else if (chatrooms[i] === chatroomName)
+				{
+					chatrooms.splice(i, username);
+					socket.write("JOINED_CHATROOM: " + chatroomName + "/n"
+								+ "SERVER_IP: " + ipAddress + "/n"
+								+ "PORT: 7070 /n"
+								+ "ROOM_REF: " + i + "/n"
+								+ "JOIN_ID: " + clientNo);
 
+					broadcast(username + " joined the chat", socket);
+				}
+				else if(chatrooms[i] === null)			
+				{
+					chatrooms.splice(i, chatroomName, username);
+					socket.write("JOINED_CHATROOM: " + chatroomName + "/n"
+								+ "SERVER_IP: " + ipAddress + "/n"
+								+ "PORT: 7070 /n"
+								+ "ROOM_REF: " + i + "/n"
+								+ "JOIN_ID: " + clientNo);
+
+					broadcast(username + " joined the chat", socket);
+				}
 			}
-			else
-			{
-				socket.write("This chat room doesn't exist");
-			}
+				
+			
 			//convert to array in order to extract room name and client name
 			
 
@@ -77,7 +106,7 @@ net.createServer(function(socket){
 
 	function broadcast(message, sender)
 	{
-		chatClients.forEach(function(client){
+		chatrooms.forEach(function(client){
 			if client===sender 
 			{
 				return;
