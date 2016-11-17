@@ -1,8 +1,8 @@
 var net = require('net');
 var IP = require('quick-local-ip');
 
-var address = IP.getLocalIP4();
-
+//var address = IP.getLocalIP4();
+var ipAddress = "10.6.86.103";
 //two dimensional array to store the chatrooms and what clients are in the rooms
 
 //INDEX |ROOM NAME|SOCKET|SOCKET| SOCKET.....
@@ -10,9 +10,13 @@ var address = IP.getLocalIP4();
 //1		|		  |		 |		|
 //2		|		  |		 |		|
 //3		|		  |		 |		|
+
+
 var chatrooms = new Array();
-
-
+var joinedBool = 0;
+const NUMBER_OF_ROOMS = 5;
+chatrooms.push("one");
+console.log(chatrooms[0].toString());
 
 var clientNo = 0;
 
@@ -23,13 +27,14 @@ var clientNo = 0;
 net.createServer(function(socket){
 
 	//socket.name = "Client " + clientNo;
-
+	process.stdout.write("ONE \n");
 
 	//chatClients.push(socket);
 	//socket.write("Welcome " + socket.name + "/n");
 	//broadcast(socket.name + " joined the chat", socket);
 	clientNo++;
-	var ipAddress = socket.address().address;
+	//var ipAddress = socket.address().address;
+	
 
 	socket.on("data", function(message){
 
@@ -47,12 +52,7 @@ net.createServer(function(socket){
 			//create chatroom
 			for(var i = 0; i<chatrooms.length; i++)
 			{
-
-				if (chatrooms.length===4)
-				{
-					//error message - too many rooms
-				}
-				else if (chatrooms[i] === chatroomName)
+				if (chatrooms[i] === chatroomName)
 				{
 					chatrooms.splice(i, username);
 					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
@@ -61,9 +61,16 @@ net.createServer(function(socket){
 								+ "ROOM_REF: " + i + "\n"
 								+ "JOIN_ID: " + clientNo);
 
+					joinedBool = 1;
+
 					broadcast(username + " joined the chat", socket);
 				}
-				else if(chatrooms[i] === null)			
+				
+			}
+
+			if(joinedBool===0)
+			{
+				if (chatrooms.length < NUMBER_OF_ROOMS)
 				{
 					chatrooms.splice(i, chatroomName, username);
 					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
@@ -73,6 +80,7 @@ net.createServer(function(socket){
 								+ "JOIN_ID: " + clientNo);
 
 					broadcast(username + " joined the chat", socket);
+
 				}
 			}
 				
@@ -107,7 +115,7 @@ net.createServer(function(socket){
 	function broadcast(message, sender)
 	{
 		chatrooms.forEach(function(client){
-			if client===sender 
+			if (client===sender)
 			{
 				return;
 			}
