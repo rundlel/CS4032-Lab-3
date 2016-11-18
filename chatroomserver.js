@@ -2,7 +2,7 @@ var net = require('net');
 var IP = require('quick-local-ip');
 
 //var address = IP.getLocalIP4();
-var ipAddress = "192.168.0.8";
+var ipAddress = "10.6.86.103";
 
 //COLLEGE IP "10.6.86.103"
 //HOME TPLINK IP 192.168.0.8
@@ -20,8 +20,28 @@ var ipAddress = "192.168.0.8";
 var chatrooms = new Array();
 var joinedBool = 0;
 const NUMBER_OF_ROOMS = 5;
-chatrooms.push("one");
-console.log(chatrooms[0].toString());
+const CHATROOM_COLUMN = 0;
+
+var chat1 = new Array();
+var chat2 = new Array();
+var chat3 = new Array();
+var chat4 = new Array();
+var chat5 = new Array();
+
+
+
+chat1[0] = "default";
+chat2[0] = "default";
+chat3[0] = "default";
+chat4[0] = "default";
+chat5[0] = "default";
+
+chatrooms.push(chat1);
+chatrooms.push(chat2);
+chatrooms.push(chat3);
+chatrooms.push(chat4);
+chatrooms.push(chat5);
+
 
 var clientNo = 0;
 
@@ -30,6 +50,8 @@ var clientNo = 0;
 //maybe use a map?
 
 net.createServer(function(socket){
+	
+	clientNo++;
 
 	//socket.name = "Client " + clientNo;
 	//process.stdout.write("ONE \n");
@@ -37,11 +59,13 @@ net.createServer(function(socket){
 	//chatClients.push(socket);
 	//socket.write("Welcome " + socket.name + "/n");
 	//broadcast(socket.name + " joined the chat", socket);
-	clientNo++;
+
+
 	//var ipAddress = socket.address().address;
 	
 
 	socket.on("data", function(message){
+
 
 		if(message.toString().substring(0,14)==="JOIN_CHATROOM:")
 		{
@@ -52,89 +76,79 @@ net.createServer(function(socket){
 
 			chatroomName = room[1].toString();
 			username = name[1].toString();
+
+			
+			var position = 0;
 			//check if username is taken
 	
 			//create chatroom
-			for(var i = 0; i<chatrooms.length; i++)
+			var index = roomAlreadyExists(chatroomName);
+
+			if(index >= 0)
 			{
-				if (chatrooms[i] === chatroomName)
-				{
-					chatrooms.splice(i, username);
+
+				position = chatrooms[index].length;
+				chatrooms[index][position] = username;
+
 					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
 								+ "SERVER_IP: " + ipAddress + "\n"
 								+ "PORT: 7070 \n"
-								+ "ROOM_REF: " + i + "\n"
+								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo);
-
-					joinedBool = 1;
-
-					//broadcast(username + " joined the chat", socket);
-				}
-				
 			}
-
-			if(joinedBool===0)
+			else
 			{
-				var index=chatrooms.length;
-
-				if (index < NUMBER_OF_ROOMS)
+				if(chatrooms[(chatrooms.length-1)][CHATROOM_COLUMN] != "default")
 				{
-					process.stdout.write("\n" + index + " " + chatroomName + " " + username + "\n");
-					chatrooms.push(chatroomName);
+					//server full please join an existing group
+					socket.write("Our server cannot accomodate another chatroom, please join an existing one: \nThe existing rooms are: \n");
+					for(var x =0; x<chatrooms.length; x++)
+					{
+						socket.write(chatrooms[x][CHATROOM_COLUMN].toString() + "\n");
 
-					chatrooms.splice(index, username);
-					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
-								+ "SERVER_IP: " + ipAddress + "\n"
-								+ "PORT: 7070 \n"
-								+ "ROOM_REF: " + i + "\n"
-								+ "JOIN_ID: " + clientNo);
-
-					//broadcast(username + " joined the chat", socket);
-
-					joinedBool = 1;
+					}
 
 				}
 				else
 				{
-					//ERROR too many chatrooms - pick one already there buddy
+					for(var j = chatrooms.length-1; j>=0; j--)
+					{
+						if(chatrooms[j][CHATROOM_COLUMN] === "default")
+						{
+							var index = j;
+						}
+					}
+
+					chatrooms[index][CHATROOM_COLUMN] = chatroomName
+
+					position = chatrooms[index].length;
+					chatrooms[index][position] = username;
+
+					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
+								+ "SERVER_IP: " + ipAddress + "\n"
+								+ "PORT: 7070 \n"
+								+ "ROOM_REF: " + index + "\n"
+								+ "JOIN_ID: " + clientNo);
 				}
 			}
-							
-
 		}
 		else if(message.toString().substring(0,15)==="LEAVE_CHATROOM:")
 		{
 			//leave room but DON'T CLOSE SOCKET
-			process.stdout.write(" \n \n");
 
-			
+			var data = message.toString().split("\n");
 
-			for( var i=0; i < chatrooms.length; i++)
-			{
-				process.stdout.write(chatrooms[i].toString() + " \n");
-			}
+			var room = data[0].toString().split(" ");	
+			var roomRef = room[1].toString();	
 
-			var leaveMessage = message.toString().split("\n");
-			var roomRef = leaveMessage[0].toString().split(" ");
-			//process.stdout.write(roomRef[1].toString());
+			var client = data[2].toString().split(" ");
+			var clientName = client[1].toString();
 
-			var joinRef = leaveMessage[0]
+			//process.stdout.write(roomRef);
+			//process.stdout.write(clientName);
 
-			var clientName = leaveMessage[2].toString().split(" ");
-			process.stdout.write(clientName[1].toString());
-
-			//var index = chatrooms.indexOf(clientName);
-			chatrooms.splice(chatrooms.indexOf(clientName),1);
-
-			process.stdout.write(" \n \n");
-
-			for( var i=0; i <= chatrooms.length; i++)
-			{
-				process.stdout.write(chatrooms[i] + " \n");
-			}
-
-
-			
+			var chatClient = chatrooms[roomRef].indexOf(clientName.toString());
+			process.stdout.write(chatClient);
 
 		}
 		else if(message.toString().substring(0, 11)==="DISCONNECT:")
@@ -144,7 +158,7 @@ net.createServer(function(socket){
 		else
 		{
 			//broadcast message
-			broadcast(socket.name + "/n >" + message, socket);
+			//broadcast(socket.name + "/n >" + message, socket);
 		}
 		
 
@@ -169,3 +183,17 @@ net.createServer(function(socket){
 	}
 
 }).listen(7070);
+
+	function roomAlreadyExists(name)
+	{
+		for(var i = 0; i<chatrooms.length; i++)
+		{
+			if(chatrooms[i][CHATROOM_COLUMN] === name)
+			{
+				return i;
+			}
+			
+		}
+
+		return -1;
+	}
