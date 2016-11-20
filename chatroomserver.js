@@ -60,9 +60,6 @@ server.listen(port,  address, function(){
 
 server.on('connection', function(socket)
 {
-
-
-	
 	clientNo++;
 	console.log("connection received");
 	socket.setEncoding('utf8');
@@ -71,7 +68,7 @@ server.on('connection', function(socket)
 	
 
 
-		if(message.includes('JOIN_CHATROOM:'))
+		if(message.includes("JOIN_CHATROOM:"))
 		{
 			//convert to array in order to extract room name and client name
 			
@@ -111,11 +108,11 @@ server.on('connection', function(socket)
 				position = chatrooms[index].length;
 				chatrooms[index][position] = username;
 	
-				socket.write('JOINED_CHATROOM: ' + chatroomName + '\n'
-								+ 'SERVER_IP: ' + address + '\n'
-								+ 'PORT: ' + port + '\n'
-								+ 'ROOM_REF: '  + index + '\n'
-								+ 'JOIN_ID: ' + clientNo);
+				socket.write("JOINED_CHATROOM: "+ chatroomName + "\n"
+								+ "SERVER_IP: " + address + "\n"
+								+ "PORT: " + port + "\n"
+								+ "ROOM_REF: "  + index + "\n"
+								+ "JOIN_ID: " + clientNo + "\n");
 
 				/*socket.write("CHAT: " + index + "\n"
 							+ "CLIENT_NAME: " + username + "\n"
@@ -201,17 +198,17 @@ server.on('connection', function(socket)
 			var a = parseInt(roomRef,10);
 			var b = parseInt(joinId,10);
 
-			socket.write("LEFT_CHATROOM: " + a + "\n" 
-								+ "JOIN_ID: " + b  + "\n");
+			socket.write("LEFT_CHATROOM: " + roomRef + "\n" 
+								+ "JOIN_ID: " + joinId + "\n");
 
 
 			leaveBroadcast(roomRef, socket.name);
 
-			for(var x = 0; x < chatrooms[a].length; x++)
+			for(var x = 0; x < chatrooms[roomRef].length; x++)
 			{
-				if(chatrooms[a] === clientName)
+				if(chatrooms[roomRef] === clientName)
 				{
-					chatrooms[a].splice(x, 1);
+					chatrooms[roomRef].splice(x, 1);
 				}
 			}
 
@@ -232,11 +229,6 @@ server.on('connection', function(socket)
 			if(index > -1)
 			{
 				socketArray.splice(index,1);
-			}
-
-			for(var x = 0; x <socketArray.length; x++)
-			{
-				process.stdout.write(socketArray[x].name + "\n");
 			}
 			
 			socket.end();
@@ -341,7 +333,7 @@ function leaveBroadcast(room, sender)
 				
 				sock.write("CHAT: " + room + "\n"
 						+ "CLIENT_NAME: " + sender + "\n"
-						+ "MESSAGE: " + sender + " has left this chatroom.\n");
+						+ "MESSAGE: " + sender + " has left this chatroom.\n\n");
 			}
 		}
 	}
@@ -389,7 +381,9 @@ function messageBroadcast(room, message, sender)
 			{
 				if(name != sender)
 				{
-						sock.write(sender + " says: " + message);
+						sock.write("CHAT: " + room + "\n"
+								+ "CLIENT_NAME: " + sender + "\n"
+								+"MESSAGE: " + message + "\n\n");
 				}
 			}
 		}
