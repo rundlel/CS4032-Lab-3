@@ -4,20 +4,6 @@ var IP = require('quick-local-ip');
 var address = IP.getLocalIP4();
 var port = 7060;
 var studentId = 13321661;
-//var ipAddress = "192.168.0.8";
-
-//COLLEGE IP "10.6.86.103"
-//HOME TPLINK IP 192.168.0.8 //DEB4 = .11
-//two dimensional array to store the chatrooms and what clients are in the rooms
-
-//INDEX |ROOM NAME|SOCKET|SOCKET| SOCKET.....
-//0		|		  |		 |		|
-//1		|		  |		 |		|
-//2		|		  |		 |		|
-//3		|		  |		 |		|
-
-
-
 
 var chatrooms = new Array();
 var presentBool = 0;
@@ -47,10 +33,6 @@ socketArray = new Array();
 
 var clientNo = 0;
 
-
-//note to self: create array to store user and the room they are in? for easy removal?
-//maybe use a map?
-
 var server = new net.createServer();
 
 server.listen(port,  address, function(){
@@ -65,8 +47,6 @@ server.on('connection', function(socket)
 	socket.setEncoding('utf8');
 
 	socket.on("data", function(message){
-	
-
 
 		if(message.includes("JOIN_CHATROOM:"))
 		{
@@ -80,8 +60,6 @@ server.on('connection', function(socket)
 			username = name[1].toString();
 
 			var position = 0;
-
-			//check if username is taken?
 	
 			//create chatroom
 			var index = roomAlreadyExists(chatroomName);
@@ -114,14 +92,7 @@ server.on('connection', function(socket)
 								+ "ROOM_REF: "  + index + "\n"
 								+ "JOIN_ID: " + clientNo + "\n");
 
-				/*socket.write("CHAT: " + index + "\n"
-							+ "CLIENT_NAME: " + username + "\n"
-							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");*/
-
 				joinBroadcast(index, username);
-						
-				//broadcast(index, username + " joined the chat", username);					
-					
 			}
 			else
 			{
@@ -171,10 +142,6 @@ server.on('connection', function(socket)
 								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo + "\n");
 
-					/*socket.write("CHAT: " + index + "\n"
-							+ "CLIENT_NAME: " + username + "\n"
-							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");*/
-
 					joinBroadcast(index, username);
 				}
 			}
@@ -210,10 +177,7 @@ server.on('connection', function(socket)
 				{
 					chatrooms[roomRef].splice(x, 1);
 				}
-			}
-
-			//socket.end();
-			
+			}			
 		}
 		else if(message.includes("DISCONNECT:"))
 		{
@@ -285,23 +249,19 @@ server.on('connection', function(socket)
 		console.log("hello");
 	});
 
-	
-
 });
 
 function joinBroadcast (room, sender)
 {
-	var sock = socketArray[0];
+	var sock;
 	var name;
-	for (var x = 0; x <chatrooms[room].length; x++)
+	for (var x = 0; x < chatrooms[room].length; x++)
 	{
 		name = chatrooms[room][x].toString();
 
 		for (var y = 0; y < socketArray.length; y++)
 		{
 			sock = socketArray[y];
-			//process.stdout.write(sock);
-
 			if (sock.name === name)
 			{
 				sock.write("CHAT: " + room + "\n"
@@ -338,30 +298,6 @@ function leaveBroadcast(room, sender)
 		}
 	}
 }
-	function broadcast (room, message, sender)
-	{
-		var sock = socketArray[0];
-		var name;
-
-		for(var x = 0; x <chatrooms[room].length; x++)
-		{
-			name = chatrooms[room][x].toString();
-
-			for(var y = 0; y < socketArray.length; y++)
-			{
-				sock = socketArray[y];
-
-				if(sock.name === name)
-				{
-					if(name != sender)
-					{
-						sock.write(message);
-					}
-				}
-			}
-		}
-	}
-
 
 
 function messageBroadcast(room, message, sender)
@@ -389,11 +325,6 @@ function messageBroadcast(room, message, sender)
 		}
 	}
 }
-
-/*function addSocket(socket)
-{
-	for(var i = 0; i <socketArray.lenght)
-}*/
 
 	function roomAlreadyExists(name)
 	{
