@@ -2,6 +2,8 @@ var net = require('net');
 var IP = require('quick-local-ip');
 
 var address = IP.getLocalIP4();
+var port = 7060;
+var studentId = 13321661;
 //var ipAddress = "192.168.0.8";
 
 //COLLEGE IP "10.6.86.103"
@@ -51,7 +53,7 @@ var clientNo = 0;
 
 var server = new net.createServer();
 
-server.listen(7060, address, function(){
+server.listen(port,  address, function(){
 	console.log("server listening \n");
 });
 
@@ -108,7 +110,7 @@ server.on('connection', function(socket){
 	
 				socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
 								+ "SERVER_IP: " + address + "\n"
-								+ "PORT: 7070 \n"
+								+ "PORT: " + port + "\n"
 								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo);
 
@@ -166,7 +168,7 @@ server.on('connection', function(socket){
 
 					socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
 								+ "SERVER_IP: " + address + "\n"
-								+ "PORT: 7070 \n"
+								+ "PORT:" + port + "\n"
 								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo + "\n");
 
@@ -196,8 +198,12 @@ server.on('connection', function(socket){
 
 			var a = parseInt(roomRef,10);
 			var b = parseInt(joinId,10);
-				
-			
+
+			socket.write("LEFT_CHATROOM: " + a + "\n" 
+								+ "JOIN_ID: " + b  + "\n");
+
+			leaveBroadcast(roomRef, socket.name);
+
 			for(var x = 0; x < chatrooms[a].length; x++)
 			{
 				if(chatrooms[a] === clientName)
@@ -205,14 +211,6 @@ server.on('connection', function(socket){
 					chatrooms[a].splice(x, 1);
 				}
 			}
-
-			socket.write("LEFT_CHATROOM: " + a + "\n" 
-								+ "JOIN_ID: " + b  + "\n");
-
-			leaveBroadcast(roomRef, clientName);
-
-			
-
 		}
 		else if(message.includes("DISCONNECT:"))
 		{
@@ -267,12 +265,16 @@ server.on('connection', function(socket){
 			socket.destroy();
 			server.close();
 		}
+		else if(message.includes("HELO"))
+		{
+			socket.write(message 
+						+ "IP: " + address + "\n"
+						+ "Port: " + port + "\n"
+						+ "StudentID: " + studentId + "\n\n");
+		}
 		else
 		{
-			var error = 7;
-			var errorString = "The server does not understand the action you wish to take. please ensure your message includes: JOIN_CHATROOM:, LEAVE_CHATROOM:, DISCONNECT: or MESSAGE:";
-			socket.write("ERROR_CODE: " + error + "\n"
-						+"ERROR_DESCRIPTION: " + errorString);
+			//unknown command
 		}
 		
 
@@ -321,8 +323,8 @@ function leaveBroadcast(room, sender)
 			if (sock.name === name)
 			{
 				sock.write("CHAT: " + room + "\n"
-							+ "CLIENT_NAME: " + sender + "\n"
-							+ "MESSAGE:" + sender + " has left this chatroom." + "\n");
+						+ "CLIENT_NAME: " + sender + "\n"
+						+ "MESSAGE: " + sender + " has left this chatroom.\n\n");
 			}
 		}
 	}
