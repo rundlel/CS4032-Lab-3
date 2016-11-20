@@ -17,7 +17,7 @@ var studentId = 13321661;
 //3		|		  |		 |		|
 
 
-//use a "row" array and push the client names into this and then this into the general array??
+
 
 var chatrooms = new Array();
 var presentBool = 0;
@@ -58,7 +58,10 @@ server.listen(port,  address, function(){
 });
 
 
-server.on('connection', function(socket){
+server.on('connection', function(socket)
+{
+
+
 	
 	clientNo++;
 	console.log("connection received");
@@ -68,13 +71,13 @@ server.on('connection', function(socket){
 	
 
 
-		if(message.includes("JOIN_CHATROOM:"))
+		if(message.includes('JOIN_CHATROOM:'))
 		{
 			//convert to array in order to extract room name and client name
 			
-			var data = message.toString().split("\n");
-			var room = data[0].toString().split(" ");
-			var name = data[3].toString().split(" ");
+			var data = message.toString().split('\n');
+			var room = data[0].toString().split(' ');
+			var name = data[3].toString().split(' ');
 
 			chatroomName = room[1].toString();
 			username = name[1].toString();
@@ -108,11 +111,11 @@ server.on('connection', function(socket){
 				position = chatrooms[index].length;
 				chatrooms[index][position] = username;
 	
-				socket.write("JOINED_CHATROOM: " + chatroomName + "\n"
-								+ "SERVER_IP: " + address + "\n"
-								+ "PORT: " + port + "\n"
-								+ "ROOM_REF: " + index + "\n"
-								+ "JOIN_ID: " + clientNo);
+				socket.write('JOINED_CHATROOM: ' + chatroomName + '\n'
+								+ 'SERVER_IP: ' + address + '\n'
+								+ 'PORT: ' + port + '\n'
+								+ 'ROOM_REF: '  + index + '\n'
+								+ 'JOIN_ID: ' + clientNo);
 
 				/*socket.write("CHAT: " + index + "\n"
 							+ "CLIENT_NAME: " + username + "\n"
@@ -125,11 +128,10 @@ server.on('connection', function(socket){
 			}
 			else
 			{
-				console.log("message received 3");
 				if(chatrooms[(chatrooms.length-1)][CHATROOM_COLUMN] != "default")
 				{
 					//server full please join an existing group
-					socket.write("Our server cannot accomodate another chatroom, please join an existing one: \nThe existing rooms are: \n");
+					socket.write('Our server cannot accomodate another chatroom, please join an existing one: \nThe existing rooms are: \n');
 					for(var x =0; x<chatrooms.length; x++)
 					{
 						socket.write(chatrooms[x][CHATROOM_COLUMN].toString() + "\n");
@@ -202,6 +204,7 @@ server.on('connection', function(socket){
 			socket.write("LEFT_CHATROOM: " + a + "\n" 
 								+ "JOIN_ID: " + b  + "\n");
 
+
 			leaveBroadcast(roomRef, socket.name);
 
 			for(var x = 0; x < chatrooms[a].length; x++)
@@ -211,6 +214,9 @@ server.on('connection', function(socket){
 					chatrooms[a].splice(x, 1);
 				}
 			}
+
+			//socket.end();
+			
 		}
 		else if(message.includes("DISCONNECT:"))
 		{
@@ -270,7 +276,7 @@ server.on('connection', function(socket){
 			socket.write(message 
 						+ "IP: " + address + "\n"
 						+ "Port: " + port + "\n"
-						+ "StudentID: " + studentId + "\n\n");
+						+ "StudentID: " + studentId + "\n");
 		}
 		else
 		{
@@ -280,12 +286,17 @@ server.on('connection', function(socket){
 
 	});
 
+	socket.on("error", function(){
 
-	socket.on("end", function(){
-		
+	});
+	socket.on("close", function(){
+		console.log("hello");
 	});
 
+	
+
 });
+
 function joinBroadcast (room, sender)
 {
 	var sock = socketArray[0];
@@ -297,12 +308,13 @@ function joinBroadcast (room, sender)
 		for (var y = 0; y < socketArray.length; y++)
 		{
 			sock = socketArray[y];
+			//process.stdout.write(sock);
 
 			if (sock.name === name)
 			{
 				sock.write("CHAT: " + room + "\n"
 							+ "CLIENT_NAME: " + sender + "\n"
-							+ "MESSAGE:" + sender + " has joined this chatroom." + "\n");
+							+ "MESSAGE:" + sender + " has joined this chatroom.\n\n");
 			}
 		}
 	}
@@ -310,21 +322,26 @@ function joinBroadcast (room, sender)
 
 function leaveBroadcast(room, sender)
 {
+	
 	var sock = socketArray[0];
+
 	var name;
 	for (var x = 0; x <chatrooms[room].length; x++)
 	{
 		name = chatrooms[room][x].toString();
+		
 
 		for (var y = 0; y < socketArray.length; y++)
 		{
 			sock = socketArray[y];
+			
 
 			if (sock.name === name)
 			{
+				
 				sock.write("CHAT: " + room + "\n"
 						+ "CLIENT_NAME: " + sender + "\n"
-						+ "MESSAGE: " + sender + " has left this chatroom.\n\n");
+						+ "MESSAGE: " + sender + " has left this chatroom.\n");
 			}
 		}
 	}
