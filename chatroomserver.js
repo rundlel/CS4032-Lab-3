@@ -18,7 +18,7 @@ var address = IP.getLocalIP4();
 //use a "row" array and push the client names into this and then this into the general array??
 
 var chatrooms = new Array();
-var joinedBool = 0;
+var presentBool = 0;
 const NUMBER_OF_ROOMS = 5;
 const CHATROOM_COLUMN = 0;
 
@@ -63,13 +63,13 @@ server.on('connection', function(socket){
 	socket.setEncoding('utf8');
 
 	socket.on("data", function(message){
-	console.log("message received 1");
+	
 
 
 		if(message.includes("JOIN_CHATROOM:"))
 		{
 			//convert to array in order to extract room name and client name
-			console.log("message received 2");
+			
 			var data = message.toString().split("\n");
 			var room = data[0].toString().split(" ");
 			var name = data[3].toString().split(" ");
@@ -86,10 +86,23 @@ server.on('connection', function(socket){
 
 			if(index >= 0)
 			{			
-				console.log("message received 3");
-				socket.name = username;
-				socketArray.push(socket);
 
+				//check that the user is not already in another chatroom
+				for(var i = 0; i < socketArray.length; i++)
+				{
+					if(socketArray[i].name === username)
+					{
+						presentBool = 1;
+					}
+				}
+
+				if(presentBool === 0)
+				{
+					socket.name = username;
+					socketArray.push(socket);
+				}
+				
+				presentBool = 0;
 				position = chatrooms[index].length;
 				chatrooms[index][position] = username;
 	
@@ -99,9 +112,11 @@ server.on('connection', function(socket){
 								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo);
 
-				socket.write("CHAT: " + index + "\n"
+				/*socket.write("CHAT: " + index + "\n"
 							+ "CLIENT_NAME: " + username + "\n"
-							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");
+							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");*/
+
+				joinBroadcast(index, username);
 						
 				//broadcast(index, username + " joined the chat", username);					
 					
@@ -131,9 +146,21 @@ server.on('connection', function(socket){
 
 					chatrooms[index][CHATROOM_COLUMN] = chatroomName;
 
-					socket.name = username;
-					socketArray.push(socket);
+					for(var i = 0; i < socketArray.length; i++)
+					{	
+						if(socketArray[i].name === username)
+						{
+							presentBool = 1;
+						}
+					}
+				
+					if(presentBool === 0)
+					{
+						socket.name = username;
+						socketArray.push(socket);
+					}
 
+					presentBool = 0;
 					position = chatrooms[index].length;
 					chatrooms[index][position] = username;
 
@@ -143,17 +170,17 @@ server.on('connection', function(socket){
 								+ "ROOM_REF: " + index + "\n"
 								+ "JOIN_ID: " + clientNo + "\n");
 
-					socket.write("CHAT: " + index + "\n"
+					/*socket.write("CHAT: " + index + "\n"
 							+ "CLIENT_NAME: " + username + "\n"
-							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");
+							+ "MESSAGE:" + username + " has joined this chatroom." + "\n");*/
 
-					//broadcast(index, username + " joined the chat", username);
+					joinBroadcast(index, username);
 				}
 			}
 		}
 		else if(message.includes("LEAVE_CHATROOM:"))
 		{
-			console.log("message received 4");
+			
 			//leave room but DON'T CLOSE SOCKET
 
 			var data = message.toString().split("\n");
@@ -166,17 +193,25 @@ server.on('connection', function(socket){
 
 			var client = data[2].toString().split(" ");
 			var clientName = client[1].toString();
-				
-			socket.write("LEFT_CHATROOM: " + roomRef + "\n" 
-								+ "JOIN_ID: " + joinId  + "\n");
 
-			socket.write("CHAT: " + roomRef + "\n"
-							+ "CLIENT_NAME: " + username + "\n"
-							+ "MESSAGE:" + username + " has left this chatroom." + "\n");
+			var a = parseInt(roomRef,10);
+			var b = parseInt(joinId,10);
 				
-			//broadcast(roomRef, socket.name + " left the chat", clientName);
-			chatrooms[roomRef].splice(x, 1);
+			
+			for(var x = 0; x < chatrooms[a].length; x++)
+			{
+				if(chatrooms[a] === clientName)
+				{
+					chatrooms[a].splice(x, 1);
+				}
+			}
 
+			socket.write("LEFT_CHATROOM: " + a + "\n" 
+								+ "JOIN_ID: " + b  + "\n");
+
+			leaveBroadcast(roomRef, clientName);
+
+			
 
 		}
 		else if(message.includes("DISCONNECT:"))
@@ -229,6 +264,7 @@ server.on('connection', function(socket){
 		}
 		else if(message.includes("KILL_SERVICE"))
 		{
+			socket.destroy();
 			server.close();
 		}
 		else
@@ -248,7 +284,49 @@ server.on('connection', function(socket){
 	});
 
 });
+function joinBroadcast (room, sender)
+{
+	var sock = socketArray[0];
+	var name;
+	for (var x = 0; x <chatrooms[room].length; x++)
+	{
+		name = chatrooms[room][x].toString();
 
+		for (var y = 0; y < socketArray.length; y++)
+		{
+			sock = socketArray[y];
+
+			if (sock.name === name)
+			{
+				sock.write("CHAT: " + room + "\n"
+							+ "CLIENT_NAME: " + sender + "\n"
+							+ "MESSAGE:" + sender + " has joined this chatroom." + "\n");
+			}
+		}
+	}
+}
+
+function leaveBroadcast(room, sender)
+{
+	var sock = socketArray[0];
+	var name;
+	for (var x = 0; x <chatrooms[room].length; x++)
+	{
+		name = chatrooms[room][x].toString();
+
+		for (var y = 0; y < socketArray.length; y++)
+		{
+			sock = socketArray[y];
+
+			if (sock.name === name)
+			{
+				sock.write("CHAT: " + room + "\n"
+							+ "CLIENT_NAME: " + sender + "\n"
+							+ "MESSAGE:" + sender + " has left this chatroom." + "\n");
+			}
+		}
+	}
+}
 	function broadcast (room, message, sender)
 	{
 		var sock = socketArray[0];
