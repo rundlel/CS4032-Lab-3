@@ -6,29 +6,9 @@ var port = 7060;
 var studentId = 13321661;
 
 var chatrooms = new Array();
-var presentBool = 0;
-const NUMBER_OF_ROOMS = 5;
 const CHATROOM_COLUMN = 0;
 
-/*var chat1 = new Array();
-var chat2 = new Array();
-var chat3 = new Array();
-var chat4 = new Array();
-var chat5 = new Array();
 
-chat1[0] = "default";
-chat2[0] = "default";
-chat3[0] = "default";
-chat4[0] = "default";
-chat5[0] = "default";
-
-chatrooms.push(chat1);
-chatrooms.push(chat2);
-chatrooms.push(chat3);
-chatrooms.push(chat4);
-chatrooms.push(chat5);*/
-
-socketArray = new Array();
 
 var clientNo = 0;
 
@@ -94,10 +74,18 @@ server.on('connection', function(socket){
 
 			leaveChat(clientName);
 
-			var index = socketArray.indexOf(socket);
-			if(index > -1)
+			//find the chatrooms the client is in
+			var sock;
+			for(var t = 0; t < chatrooms.length; t++)
 			{
-				socketArray.splice(index,1);
+				for(var u = 0; u < chatrooms[t].length; t++)
+				{
+					sock = chatrooms[t][u];
+					if(sock.name === clientName)
+					{
+						chatrooms[t].splice(u,1);
+					}
+				}
 			}
 			
 			socket.end();
