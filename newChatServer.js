@@ -33,7 +33,9 @@ server.on('connection', function(socket){
 
 		if(message.includes("JOIN_CHATROOM:"))
 		{
+			
 			joinChatroom(socket, message);
+
 
 		}
 		else if(message.includes("LEAVE_CHATROOM:"))
@@ -87,7 +89,7 @@ server.on('connection', function(socket){
 					}
 				}
 			}
-			
+
 			socket.end();
 		}
 		else if(message.includes("MESSAGE:"))
@@ -184,13 +186,11 @@ function messageBroadcast(room, message, sender)
 		if(index < 0)
 		{
 			index = chatrooms.length;
-
-			chatrooms[index] = [];
-			chatrooms[index].push(chatroomName);
+			var temp = new Array();
+			chatrooms[index] = temp;
+			chatrooms[index][0] = chatroomName;
 		}
 
-		socket.name = username;
-		chatrooms[index].push(socket);
 	
 		socket.write("JOINED_CHATROOM: "+ chatroomName + "\n"
 					+ "SERVER_IP: " + address + "\n"
@@ -198,15 +198,31 @@ function messageBroadcast(room, message, sender)
 					+ "ROOM_REF: "  + index + "\n"
 					+ "JOIN_ID: " + clientNo + "\n");
 
-		var b = " has joined this chatroom.\n\n";
-		broadcast(index, username, b);		
+		socket.name = username;
+		chatrooms[index].push(socket);
+
+
+
+		var b = username + " has joined this chatroom.\n\n";
+
+		var sock;
+		for (var x = 1; x <chatrooms[index].length; x++)
+		{
+			sock = chatrooms[index][x];
+			sock.write("CHAT: " + index + "\n"
+					+ "CLIENT_NAME: " + username + "\n"
+					+ "MESSAGE: " + b);
+		}	
+
+		
+		//broadcast(index, username, b);		
 	}
 
 	function roomAlreadyExists(name)
 	{
 		for(var i = 0; i<chatrooms.length; i++)
 		{
-			if(chatrooms[i][CHATROOM_COLUMN] === name)
+			if(chatrooms[i][CHATROOM_COLUMN].toString() === name)
 			{
 				return i;
 			}
