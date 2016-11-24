@@ -26,7 +26,7 @@ server.on('connection', function(socket){
 
 		if(message.includes("JOIN_CHATROOM:"))
 		{
-			console.log("join message");
+			
 			var data = message.toString().split('\n');
 			var room = data[0].toString().split(' ');
 			var name = data[3].toString().split(' ');
@@ -44,9 +44,6 @@ server.on('connection', function(socket){
 				chatrooms[index][0] = chatroomName;
 			}	
 
-			
-
-
 			socket.name = username;
 			chatrooms[index].push(socket);
 
@@ -62,7 +59,6 @@ server.on('connection', function(socket){
 			testArray = chatrooms[index];
 			var sock;
 
-			// console.log(chatrooms);
 
 			for (var x = 1; x <testArray.length; x++)
 			{
@@ -70,8 +66,6 @@ server.on('connection', function(socket){
 				sock.write("CHAT: " + index + "\n"
 					+ "CLIENT_NAME: " + username + "\n"
 					+ "MESSAGE: " + b);
-
-				console.log("broadcast sent to " + sock.name);
 			}
 
 
@@ -107,8 +101,6 @@ server.on('connection', function(socket){
 					chatrooms[roomRef].splice(x, 1);
 				}
 			}
-			console.log("POST LEAVE TEST");
-			console.log(chatrooms);
 		}
 		else if(message.includes("DISCONNECT:"))
 		{
@@ -116,21 +108,42 @@ server.on('connection', function(socket){
 			var client = data[2].toString().split(" ");
 			var clientName = client[1].toString();
 
-			leaveChat(clientName);
+			//leaveChat(clientName);
 
 			//find the chatrooms the client is in
 			var sock;
-			for(var t = 0; t < chatrooms.length; t++)
+			var tempSock;
+			var temp = new Array();
+			var message = " has left this chatroom. \n\n";
+
+			for(var x = 0; x<chatrooms.length; x++)
 			{
-				for(var u = 0; u < chatrooms[t].length; t++)
+				for(var y = 1; y<chatrooms[x].length; y++)
 				{
-					sock = chatrooms[t][u];
+					temp = chatrooms[x];
+					sock = chatrooms[x][y];
+
 					if(sock.name === clientName)
 					{
-						chatrooms[t].splice(u,1);
+						
+						/*sock.write("CHAT: " +  x + "\n" 
+							+ "CLIENT_NAME: " + clientName + "\n"
+							+ "MESSAGE: " + clientName + message);*/
+
+						for(var t = 1; t < chatrooms[x].length; t++)
+						{
+							tempSock = chatrooms[x][t];
+							tempSock.write("CHAT: " +  x + "\n" 
+							+ "CLIENT_NAME: " + clientName + "\n"
+							+ "MESSAGE: " + clientName + message);
+						}
+						chatrooms[x].splice(y,1);
+					
 					}
 				}
 			}
+
+			
 
 			socket.end();
 		}
