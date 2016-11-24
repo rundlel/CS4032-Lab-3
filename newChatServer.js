@@ -67,9 +67,6 @@ server.on('connection', function(socket){
 					+ "CLIENT_NAME: " + username + "\n"
 					+ "MESSAGE: " + b);
 			}
-
-
-
 		}
 		else if(message.includes("LEAVE_CHATROOM:"))
 		{
@@ -108,9 +105,6 @@ server.on('connection', function(socket){
 			var client = data[2].toString().split(" ");
 			var clientName = client[1].toString();
 
-			//leaveChat(clientName);
-
-			//find the chatrooms the client is in
 			var sock;
 			var tempSock;
 			var temp = new Array();
@@ -125,11 +119,6 @@ server.on('connection', function(socket){
 
 					if(sock.name === clientName)
 					{
-						
-						/*sock.write("CHAT: " +  x + "\n" 
-							+ "CLIENT_NAME: " + clientName + "\n"
-							+ "MESSAGE: " + clientName + message);*/
-
 						for(var t = 1; t < chatrooms[x].length; t++)
 						{
 							tempSock = chatrooms[x][t];
@@ -138,12 +127,9 @@ server.on('connection', function(socket){
 							+ "MESSAGE: " + clientName + message);
 						}
 						chatrooms[x].splice(y,1);
-					
 					}
 				}
 			}
-
-			
 
 			socket.end();
 		}
@@ -168,8 +154,6 @@ server.on('connection', function(socket){
 			{
 					prepareForBroadcast = prepareForBroadcast + theMessage[y] + " ";
 			}
-
-			//broadcast message
 			messageBroadcast(roomRef, prepareForBroadcast, clientName);
 		}
 		else if(message.includes("KILL_SERVICE"))
@@ -240,21 +224,6 @@ function messageBroadcast(room, message, sender)
 			}
 		}
 		return -1;
-	}
-
-	function leaveChat(socket, clientName)
-	{
-		for(var x =0; x < chatrooms.length; x++)
-		{
-			for(var y = 0; y< chatrooms[x].length; y++)
-			{
-				if(chatrooms[x][y] === clientName)
-				{
-					chatrooms[x].splice(y,1);
-					broadcast(x, clientName + " left the chat", clientName);
-				}
-			}
-		}
 	}
 	
 	server.on("close", function() {
