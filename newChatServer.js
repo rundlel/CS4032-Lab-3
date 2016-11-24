@@ -8,20 +8,13 @@ var studentId = 13321661;
 var chatrooms = new Array();
 const CHATROOM_COLUMN = 0;
 
-
-
 var clientNo = 0;
-
-
-//note to self: create array to store user and the room they are in? for easy removal?
-//maybe use a map?
-
+var testArray = new Array();
 var server = new net.createServer();
 
 server.listen(port,  address, function(){
 	console.log("server listening \n");
 });
-
 
 server.on('connection', function(socket){
 
@@ -33,8 +26,54 @@ server.on('connection', function(socket){
 
 		if(message.includes("JOIN_CHATROOM:"))
 		{
+			console.log("join message");
+			var data = message.toString().split('\n');
+			var room = data[0].toString().split(' ');
+			var name = data[3].toString().split(' ');
+
+			chatroomName = room[1].toString();
+			username = name[1].toString();
+
+			var index = roomAlreadyExists(chatroomName);
+
+			if(index < 0)
+			{
+				index = chatrooms.length;
+				var temp = new Array();
+				chatrooms[index] = temp;
+				chatrooms[index][0] = chatroomName;
+			}	
+
 			
-			joinChatroom(socket, message);
+
+
+			socket.name = username;
+			chatrooms[index].push(socket);
+
+			socket.write("JOINED_CHATROOM: "+ chatroomName + "\n"
+					+ "SERVER_IP: " + address + "\n"
+					+ "PORT: " + port + "\n"
+					+ "ROOM_REF: "  + index + "\n"
+					+ "JOIN_ID: " + clientNo + "\n");
+
+
+			var b = username + " has joined this chatroom.\n\n";
+
+			testArray = chatrooms[index];
+			var sock;
+
+			// console.log(chatrooms);
+
+			for (var x = 1; x <testArray.length; x++)
+			{
+				sock = testArray[x];
+				sock.write("CHAT: " + index + "\n"
+					+ "CLIENT_NAME: " + username + "\n"
+					+ "MESSAGE: " + b);
+
+				console.log("broadcast sent to " + sock.name);
+			}
+
 
 
 		}
@@ -58,15 +97,18 @@ server.on('connection', function(socket){
 			var b = " has left this chatroom.\n\n";
 			broadcast(roomRef, clientName, b);	
 
-			var sock = chatrooms[roomRef];
+			var sock;
 
-			for(var x = 0; x < chatrooms[roomRef].length; x++)
+			for(var x = 1; x < chatrooms[roomRef].length; x++)
 			{
+				sock =  chatrooms[roomRef][x];
 				if(sock.name === clientName)
 				{
 					chatrooms[roomRef].splice(x, 1);
 				}
 			}
+			console.log("POST LEAVE TEST");
+			console.log(chatrooms);
 		}
 		else if(message.includes("DISCONNECT:"))
 		{
@@ -172,57 +214,14 @@ function messageBroadcast(room, message, sender)
 	}
 }
 
-	function joinChatroom(socket, message)
-	{
-		var data = message.toString().split('\n');
-		var room = data[0].toString().split(' ');
-		var name = data[3].toString().split(' ');
-
-		chatroomName = room[1].toString();
-		username = name[1].toString();
-
-		var index = roomAlreadyExists(chatroomName);
-
-		if(index < 0)
-		{
-			index = chatrooms.length;
-			var temp = new Array();
-			chatrooms[index] = temp;
-			chatrooms[index][0] = chatroomName;
-		}
-
-	
-		socket.write("JOINED_CHATROOM: "+ chatroomName + "\n"
-					+ "SERVER_IP: " + address + "\n"
-					+ "PORT: " + port + "\n"
-					+ "ROOM_REF: "  + index + "\n"
-					+ "JOIN_ID: " + clientNo + "\n");
-
-		socket.name = username;
-		chatrooms[index].push(socket);
-
-
-
-		var b = username + " has joined this chatroom.\n\n";
-
-		var sock;
-		for (var x = 1; x <chatrooms[index].length; x++)
-		{
-			sock = chatrooms[index][x];
-			sock.write("CHAT: " + index + "\n"
-					+ "CLIENT_NAME: " + username + "\n"
-					+ "MESSAGE: " + b);
-		}	
-
-		
-		//broadcast(index, username, b);		
-	}
-
 	function roomAlreadyExists(name)
 	{
+		var temp = new Array();
 		for(var i = 0; i<chatrooms.length; i++)
 		{
-			if(chatrooms[i][CHATROOM_COLUMN].toString() === name)
+			temp = chatrooms[i];
+
+			if(temp[0] === name)
 			{
 				return i;
 			}
